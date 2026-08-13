@@ -1005,10 +1005,14 @@ if (
         // ------------------------------------------------------
 
         const tickets = leerTickets();
-        
+
 console.log("BUSCANDO CODIGO:", codigo);
 console.log("TICKETS EXISTENTES:", tickets);
-
+console.log("==============================");
+console.log("BUSCANDO CODIGO:", codigo);
+console.log("TICKETS EXISTENTES:");
+console.log(tickets);
+console.log("==============================");
         // ------------------------------------------------------
         // BUSCAR TICKET
         // ------------------------------------------------------
