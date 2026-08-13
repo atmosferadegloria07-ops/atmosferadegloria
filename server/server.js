@@ -605,7 +605,9 @@ if (
                 req.method === "POST" &&
                 req.url === "/api/crear-comprobante"
             ) {
-
+            console.log("==============================");
+console.log("ENTRÓ A CREAR COMPROBANTE");
+console.log("==============================");
                 try {
 
                     const datos =
@@ -614,7 +616,8 @@ if (
 
                     const transactionId =
                         datos.transactionId;
-
+console.log("DATOS RECIBIDOS:");
+console.log(datos);
 
                     if (!transactionId) {
 
