@@ -237,7 +237,23 @@ function leerBody(req) {
 // =====================================================
 // SERVIDOR
 // =====================================================
+// SERVIR ARCHIVOS DEL SITIO WEB
+function servirArchivo(req, res) {
+  let archivo = req.url === "/" ? "index.html" : req.url;
 
+  const ruta = path.join(__dirname, "..", archivo);
+
+  fs.readFile(ruta, (err, contenido) => {
+    if (err) {
+      res.writeHead(404);
+      res.end("Archivo no encontrado");
+      return;
+    }
+
+    res.writeHead(200);
+    res.end(contenido);
+  });
+}
 const server =
     http.createServer(
         async (req, res) => {
