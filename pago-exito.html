@@ -272,8 +272,9 @@ async function cargarComprobante() {
         // 1. CONSULTAR TRANSACCIÓN EN NUESTRO SERVIDOR
         // =====================================================
 
-        const respuesta = await fetch(
-    `http://localhost:3000/api/transaccion/${encodeURIComponent(transactionId)}`
+     const respuesta = await fetch(
+`https://atmosferadegloria.onrender.com/api/transaccion/${encodeURIComponent(transactionId)}`
+);
          );
 
         const resultado = await respuesta.json();
