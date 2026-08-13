@@ -793,7 +793,10 @@ if (
                     guardarTickets(
                         tickets
                     );
-
+console.log(
+    "TICKETS GUARDADOS:",
+    tickets
+);
 
                     console.log("");
                     console.log(
