@@ -895,9 +895,12 @@ console.log(
 
                     const tickets =
                         leerTickets();
-console.log("CODIGO BUSCADO:", codigo);
-console.log("TICKETS GUARDADOS:", tickets);
-
+console.log("=================================");
+console.log("BUSCANDO TICKET");
+console.log("CODIGO RECIBIDO:", codigo);
+console.log("TOTAL TICKETS:", tickets.length);
+console.log(tickets);
+console.log("=================================");
                     const ticket =
                         tickets.find(
                             item =>
