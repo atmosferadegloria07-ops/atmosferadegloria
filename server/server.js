@@ -2,41 +2,70 @@ const http = require("http");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
+
+
 // =====================================================
 // ATMÓSFERA DE GLORIA
-// SERVIDOR DE PAGOS WOMPI
+// SERVIDOR WOMPI + SISTEMA DE TICKETS
 // =====================================================
 
 
 // =====================================================
-// CARGAR .ENV
+// CARGAR VARIABLES .ENV
 // =====================================================
 
 const envPath = path.join(__dirname, ".env");
 
+
 if (fs.existsSync(envPath)) {
 
-    const envFile = fs.readFileSync(envPath, "utf8");
+    const envFile =
+        fs.readFileSync(
+            envPath,
+            "utf8"
+        );
 
-    envFile.split(/\r?\n/).forEach(line => {
+
+    envFile
+    .split(/\r?\n/)
+    .forEach(line => {
 
         line = line.trim();
 
-        if (!line || line.startsWith("#")) {
+
+        if (
+            !line ||
+            line.startsWith("#")
+        ) {
             return;
         }
 
-        const posicion = line.indexOf("=");
+
+        const posicion =
+            line.indexOf("=");
+
 
         if (posicion === -1) {
             return;
         }
 
-        const key = line.substring(0, posicion).trim();
-        const value = line.substring(posicion + 1).trim();
+
+        const key =
+            line
+            .substring(0,posicion)
+            .trim();
+
+
+        const value =
+            line
+            .substring(posicion + 1)
+            .trim();
+
 
         process.env[key] = value;
+
     });
+
 }
 
 
@@ -44,31 +73,49 @@ if (fs.existsSync(envPath)) {
 // CONFIGURACIÓN
 // =====================================================
 
-const PORT = Number(process.env.PORT || 3000);
+
+const PORT =
+    Number(
+        process.env.PORT || 3000
+    );
+
 
 const WOMPI_PUBLIC_KEY =
     process.env.WOMPI_PUBLIC_KEY;
+
 
 const WOMPI_INTEGRITY_SECRET =
     process.env.WOMPI_INTEGRITY_SECRET;
 
 
+
 // =====================================================
-// BASE DE DATOS
+// BASE DE DATOS TICKETS
 // =====================================================
+
 
 const databasePath =
-    path.join(__dirname, "..", "database");
+    path.join(
+        __dirname,
+        "..",
+        "database"
+    );
 
-if (!fs.existsSync(databasePath)) {
+
+if (
+    !fs.existsSync(databasePath)
+) {
 
     fs.mkdirSync(
         databasePath,
         {
-            recursive: true
+            recursive:true
         }
     );
+
 }
+
+
 
 const ticketsFile =
     path.join(
@@ -77,23 +124,30 @@ const ticketsFile =
     );
 
 
-if (!fs.existsSync(ticketsFile)) {
+
+if (
+    !fs.existsSync(ticketsFile)
+) {
 
     fs.writeFileSync(
         ticketsFile,
         "[]",
         "utf8"
     );
+
 }
 
 
+
 // =====================================================
-// FUNCIONES DE TICKETS
+// LEER TICKETS
 // =====================================================
 
-function leerTickets() {
+
+function leerTickets(){
 
     try {
+
 
         const contenido =
             fs.readFileSync(
@@ -101,112 +155,192 @@ function leerTickets() {
                 "utf8"
             );
 
-        return JSON.parse(
-            contenido || "[]"
-        );
 
-    } catch (error) {
+        if(!contenido){
+
+            return [];
+
+        }
+
+
+
+        const tickets =
+            JSON.parse(
+                contenido
+            );
+
+
+        return Array.isArray(tickets)
+            ? tickets
+            : [];
+
+
+
+    } catch(error){
+
 
         console.error(
             "ERROR LEYENDO TICKETS:",
             error
         );
 
+
         return [];
+
     }
+
 }
 
 
-function guardarTickets(tickets) {
 
-    fs.writeFileSync(
-        ticketsFile,
-        JSON.stringify(
-            tickets,
-            null,
-            2
-        ),
-        "utf8"
-    );
+// =====================================================
+// GUARDAR TICKETS
+// =====================================================
+
+
+function guardarTickets(tickets){
+
+
+    try {
+
+
+        fs.writeFileSync(
+            ticketsFile,
+            JSON.stringify(
+                tickets,
+                null,
+                2
+            ),
+            "utf8"
+        );
+
+
+        console.log(
+            "TICKETS GUARDADOS:",
+            tickets.length
+        );
+
+
+    }catch(error){
+
+
+        console.error(
+            "ERROR GUARDANDO TICKETS:",
+            error
+        );
+
+
+    }
+
+
 }
 
 
+
 // =====================================================
-// GENERAR CÓDIGO ÚNICO
+// GENERAR CODIGO TICKET
 // =====================================================
 
-function generarCodigoTicket() {
+
+function generarCodigoTicket(){
+
 
     return (
+
         "ADG-" +
+
         Date.now() +
+
         "-" +
+
         crypto
-            .randomBytes(5)
-            .toString("hex")
-            .toUpperCase()
+        .randomBytes(5)
+        .toString("hex")
+        .toUpperCase()
+
     );
+
+
 }
 
 
+
 // =====================================================
-// FUNCIÓN RESPUESTA JSON
+// RESPONDER JSON
 // =====================================================
+
 
 function responder(
     res,
     status,
     datos
-) {
+){
 
     res.writeHead(
         status,
         {
+
             "Content-Type":
-                "application/json; charset=utf-8",
+            "application/json; charset=utf-8",
+
 
             "Access-Control-Allow-Origin":
-                "*",
+            "*",
+
 
             "Access-Control-Allow-Methods":
-                "GET, POST, OPTIONS",
+            "GET,POST,OPTIONS",
+
 
             "Access-Control-Allow-Headers":
-                "Content-Type"
+            "Content-Type"
+
         }
     );
+
 
     res.end(
         JSON.stringify(datos)
     );
+
+
 }
+
 
 
 // =====================================================
 // LEER BODY
 // =====================================================
 
-function leerBody(req) {
+
+function leerBody(req){
+
 
     return new Promise(
-        (resolve, reject) => {
+        (resolve,reject)=>{
 
-            let body = "";
+
+            let body="";
+
 
             req.on(
                 "data",
-                chunk => {
+                chunk=>{
 
                     body +=
-                        chunk.toString();
+                    chunk.toString();
+
                 }
             );
 
+
             req.on(
                 "end",
-                () => {
+                ()=>{
 
-                    try {
+
+                    try{
+
 
                         resolve(
                             JSON.parse(
@@ -214,25 +348,31 @@ function leerBody(req) {
                             )
                         );
 
-                    } catch (error) {
 
-                        reject(
-                            new Error(
-                                "JSON inválido."
-                            )
-                        );
+                    }catch(error){
+
+
+                        reject(error);
+
+
                     }
+
+
                 }
             );
+
 
             req.on(
                 "error",
                 reject
             );
+
+
         }
     );
-}
 
+
+}
 
 // =====================================================
 // SERVIDOR
@@ -597,368 +737,383 @@ if (
             }
 
 
-            // =================================================
-            // CREAR COMPROBANTE
-            // =================================================
+           // =================================================
+// CREAR COMPROBANTE
+// =================================================
 
-            if (
-                req.method === "POST" &&
-                req.url === "/api/crear-comprobante"
-            ) {
-            console.log("==============================");
-console.log("ENTRÓ A CREAR COMPROBANTE");
-console.log("==============================");
-                try {
+if (
+    req.method === "POST" &&
+    req.url === "/api/crear-comprobante"
+) {
 
-                    const datos =
-                        await leerBody(req);
+    try {
 
-
-                    const transactionId =
-                        datos.transactionId;
-console.log("DATOS RECIBIDOS:");
-console.log(datos);
-
-                    if (!transactionId) {
-
-                        throw new Error(
-                            "Falta el ID de la transacción."
-                        );
-                    }
+        console.log("");
+        console.log("=================================");
+        console.log("ENTRÓ A CREAR COMPROBANTE");
+        console.log("=================================");
 
 
-                    console.log("");
-                    console.log(
-                        "===================================="
-                    );
-
-                    console.log(
-                        "VERIFICANDO PAGO"
-                    );
-
-                    console.log(
-                        "Transacción:",
-                        transactionId
-                    );
-
-                    console.log(
-                        "===================================="
-                    );
+        const datos =
+            await leerBody(req);
 
 
-                    // -----------------------------------------
-                    // CONSULTAR WOMPI
-                    // -----------------------------------------
+        console.log(
+            "DATOS RECIBIDOS:",
+            datos
+        );
 
-                    const respuesta =
-                   await fetch(
+
+        const transactionId =
+            datos.transactionId;
+
+
+        if (!transactionId) {
+
+            throw new Error(
+                "Falta el ID de la transacción."
+            );
+
+        }
+
+
+
+        // CONSULTAR WOMPI
+
+        const respuesta =
+            await fetch(
                 "https://api-sandbox.wompi.co/v1/transactions/" +
-                    encodeURIComponent(
-                      transactionId
-                       )
-                          );
-
-
-                    const resultado =
-                        await respuesta.json();
-
-
-                    console.log(
-                        "RESPUESTA WOMPI:",
-                        resultado
-                    );
-
-
-                    if (!respuesta.ok) {
-
-                        throw new Error(
-                            "Wompi no pudo consultar la transacción."
-                        );
-                    }
-
-
-                    const transaccion =
-                        resultado.data;
-
-
-                    if (!transaccion) {
-
-                        throw new Error(
-                            "No encontramos la transacción."
-                        );
-                    }
-
-
-                    // -----------------------------------------
-                    // VERIFICAR ESTADO
-                    // -----------------------------------------
-
-                    if (
-                        transaccion.status !==
-                        "APPROVED"
-                    ) {
-
-                        throw new Error(
-                            "El pago no está aprobado. Estado: " +
-                            transaccion.status
-                        );
-                    }
-
-
-                    // -----------------------------------------
-                    // LEER TICKETS
-                    // -----------------------------------------
-
-                    const tickets =
-                        leerTickets();
-
-
-                    // -----------------------------------------
-                    // EVITAR DUPLICADOS
-                    // -----------------------------------------
-
-                    const existente =
-                        tickets.find(
-                            ticket =>
-                                ticket.transactionId ===
-                                transactionId
-                        );
-
-
-                    if (existente) {
-
-                        responder(
-                            res,
-                            200,
-                            {
-
-                                success: true,
-
-                                ticket:
-                                    existente
-                            }
-                        );
-
-                        return;
-                    }
-
-
-                    // -----------------------------------------
-                    // CREAR TICKET
-                    // -----------------------------------------
-
-                    const codigoTicket =
-                        generarCodigoTicket();
-
-
-                    const ticket = {
-
-                        ticketId:
-                            codigoTicket,
-
-                        transactionId:
-                            transactionId,
-
-                        reference:
-                            transaccion.reference,
-
-                        status:
-                            "PAGADO",
-
-                        amountInCents:
-                            transaccion.amount_in_cents,
-
-                        amount:
-                            transaccion.amount_in_cents / 100,
-
-                        currency:
-                            transaccion.currency,
-
-                        paymentMethod:
-                            transaccion.payment_method_type,
-
-                        createdAt:
-                            new Date().toISOString(),
-
-                        used:
-                            false
-                    };
-
-
-                    // -----------------------------------------
-                    // GUARDAR TICKET
-                    // -----------------------------------------
-
-                    tickets.push(
-                        ticket
-                    );
-
-                    guardarTickets(
-                        tickets
-                    );
-console.log(
-    "TICKETS GUARDADOS:",
-    tickets
-);
-
-                    console.log("");
-                    console.log(
-                        "===================================="
-                    );
-
-                    console.log(
-                        "COMPROBANTE CREADO"
-                    );
-
-                    console.log(
-                        "Ticket:",
-                        codigoTicket
-                    );
-
-                    console.log(
-                        "Referencia:",
-                        transaccion.reference
-                    );
-
-                    console.log(
-                        "===================================="
-                    );
-
-
-                    // -----------------------------------------
-                    // RESPONDER
-                    // -----------------------------------------
-
-                    responder(
-                        res,
-                        200,
-                        {
-
-                            success: true,
-
-                            ticket:
-                                ticket
-                        }
-                    );
-
-                    return;
-
-
-                } catch (error) {
-
-                    console.error(
-                        "ERROR CREANDO COMPROBANTE:",
-                        error
-                    );
-
-
-                    responder(
-                        res,
-                        400,
-                        {
-
-                            success: false,
-
-                            error:
-                                error.message
-                        }
-                    );
-
-                    return;
-                }
-            }
-
-
-            // =================================================
-            // CONSULTAR TICKET
-            // =================================================
-
-            if (
-                req.method === "GET" &&
-                req.url.startsWith(
-                    "/api/ticket/"
+                encodeURIComponent(
+                    transactionId
                 )
-            ) {
-
-                try {
-
-                    const codigo =
-                        decodeURIComponent(
-                            req.url
-                                .replace(
-                                    "/api/ticket/",
-                                    ""
-                                )
-                                .split("?")[0]
-                        );
+            );
 
 
-                    const tickets =
-                        leerTickets();
-console.log("=================================");
-console.log("BUSCANDO TICKET");
-console.log("CODIGO RECIBIDO:", codigo);
-console.log("TOTAL TICKETS:", tickets.length);
-console.log(tickets);
-console.log("=================================");
-                    const ticket =
-                        tickets.find(
-                            item =>
-                                item.ticketId ===
-                                codigo
-                        );
+        const resultado =
+            await respuesta.json();
 
 
-                    if (!ticket) {
 
-                        responder(
-                            res,
-                            404,
-                            {
+        if (!respuesta.ok) {
 
-                                success: false,
+            throw new Error(
+                "Error consultando Wompi."
+            );
 
-                                error:
-                                    "Ticket no encontrado."
-                            }
-                        );
-
-                        return;
-                    }
+        }
 
 
-                    responder(
-                        res,
-                        200,
-                        {
 
-                            success: true,
-
-                            ticket:
-                                ticket
-                        }
-                    );
-
-                    return;
+        const transaccion =
+            resultado.data;
 
 
-                } catch (error) {
 
-                    responder(
-                        res,
-                        500,
-                        {
+        if (!transaccion) {
 
-                            success: false,
+            throw new Error(
+                "Transacción no encontrada."
+            );
 
-                            error:
-                                error.message
-                        }
-                    );
+        }
 
-                    return;
+
+
+        if (
+            transaccion.status !== "APPROVED"
+        ) {
+
+            throw new Error(
+                "Pago no aprobado: " +
+                transaccion.status
+            );
+
+        }
+
+
+
+        // LEER TICKETS
+
+        let tickets =
+            leerTickets();
+
+
+
+        // EVITAR DUPLICADOS
+
+        const existente =
+            tickets.find(
+                t =>
+                t.transactionId === transactionId
+            );
+
+
+        if (existente) {
+
+            console.log(
+                "TICKET YA EXISTE:",
+                existente.ticketId
+            );
+
+
+            responder(
+                res,
+                200,
+                {
+                    success:true,
+                    ticket:existente
                 }
+            );
+
+            return;
+
+        }
+
+
+
+
+        // CREAR TICKET
+
+        const codigoTicket =
+            generarCodigoTicket();
+
+
+
+        const ticket = {
+
+            ticketId:
+                codigoTicket,
+
+
+            transactionId:
+                transactionId,
+
+
+            reference:
+                transaccion.reference,
+
+
+            status:
+                "PAGADO",
+
+
+            amount:
+                transaccion.amount_in_cents / 100,
+
+
+            currency:
+                transaccion.currency,
+
+
+            paymentMethod:
+                transaccion.payment_method_type,
+
+
+            createdAt:
+                new Date().toISOString(),
+
+
+            used:false
+
+        };
+
+
+
+
+        // GUARDAR
+
+        tickets.push(ticket);
+
+
+        guardarTickets(
+            tickets
+        );
+
+
+
+        console.log("");
+        console.log("==============================");
+        console.log("COMPROBANTE CREADO");
+        console.log(
+            "Ticket:",
+            ticket.ticketId
+        );
+        console.log("==============================");
+
+
+
+
+        responder(
+            res,
+            200,
+            {
+
+                success:true,
+
+                ticket:ticket
+
             }
+        );
+
+
+        return;
+
+
+
+    } catch(error) {
+
+
+        console.error(
+            "ERROR CREANDO COMPROBANTE:",
+            error
+        );
+
+
+        responder(
+            res,
+            400,
+            {
+
+                success:false,
+
+                error:error.message
+
+            }
+        );
+
+
+        return;
+
+    }
+
+}
+
+
+ // =================================================
+// CONSULTAR TICKET
+// =================================================
+
+if (
+    req.method === "GET" &&
+    req.url.startsWith("/api/ticket/")
+) {
+
+    try {
+
+
+        const codigo =
+            decodeURIComponent(
+                req.url
+                .replace(
+                    "/api/ticket/",
+                    ""
+                )
+                .split("?")[0]
+            );
+
+
+
+        console.log("");
+        console.log("==============================");
+        console.log("CONSULTANDO TICKET");
+        console.log(
+            "Código recibido:",
+            codigo
+        );
+        console.log("==============================");
+
+
+
+        const tickets =
+            leerTickets();
+
+
+
+        console.log(
+            "Cantidad tickets:",
+            tickets.length
+        );
+
+
+
+        const ticket =
+            tickets.find(
+                item =>
+                    item.ticketId === codigo
+            );
+
+
+
+        if (!ticket) {
+
+
+            console.log(
+                "NO EXISTE EL TICKET"
+            );
+
+
+            responder(
+                res,
+                404,
+                {
+                    success:false,
+                    mensaje:
+                    "Ticket no encontrado"
+                }
+            );
+
+
+            return;
+
+        }
+
+
+
+        console.log(
+            "TICKET ENCONTRADO:",
+            ticket.ticketId
+        );
+
+
+
+        responder(
+            res,
+            200,
+            {
+                success:true,
+                ticket:ticket
+            }
+        );
+
+
+        return;
+
+
+
+    } catch(error) {
+
+
+        console.error(
+            "ERROR CONSULTANDO TICKET:",
+            error
+        );
+
+
+        responder(
+            res,
+            500,
+            {
+                success:false,
+                error:error.message
+            }
+        );
+
+
+        return;
+
+    }
+
+}
 
 // ============================================================
 // USAR / VALIDAR TICKET
