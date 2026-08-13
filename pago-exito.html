@@ -320,8 +320,8 @@ async function cargarComprobante() {
 
 
        const respuestaComprobante =
-    await fetch(
-        "http://localhost:3000/api/crear-comprobante",
+await fetch(
+    "https://atmosferadegloria.onrender.com/api/crear-comprobante",
         {
             method: "POST",
 
@@ -547,8 +547,8 @@ async function cargarComprobante() {
         // =====================================================
 
         const qrContenido =
-        "http://localhost:3000/api/ticket/" +
-         encodeURIComponent(codigoTicket);
+"https://atmosferadegloria.onrender.com/api/ticket/" +
+encodeURIComponent(codigoTicket);
 
 
         console.log(
