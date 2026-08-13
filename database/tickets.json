@@ -1,0 +1,15 @@
+[
+  {
+    "ticketId": "ADG-1786424881372-F7252883CF",
+    "transactionId": "12073632-1786424798-60566",
+    "reference": "ADG-1786424769333-6AC40724",
+    "status": "PAGADO",
+    "amountInCents": 7000000,
+    "amount": 70000,
+    "currency": "COP",
+    "paymentMethod": "CARD",
+    "createdAt": "2026-08-11T05:08:01.372Z",
+    "used": true,
+    "usedAt": "2026-08-11T07:15:34.685Z"
+  }
+]

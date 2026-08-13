@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Comprobante | Atmósfera de Gloria</title>
+
+    <!-- Librería para generar QR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #050505;
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 30px;
+        }
+
+        .contenedor {
+            width: 100%;
+            max-width: 650px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 18px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,.5);
+        }
+
+        .logo {
+            font-size: 42px;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            margin: 10px 0;
+            font-size: 30px;
+        }
+
+        .mensaje {
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+
+        .estado {
+            background: #0b2418;
+            border: 1px solid #16804b;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .estado h2 {
+            color: #32d583;
+            margin: 0 0 8px;
+        }
+
+        .datos {
+            text-align: left;
+            background: #080808;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .fila {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 14px 0;
+            border-bottom: 1px solid #292929;
+        }
+
+        .fila:last-child {
+            border-bottom: none;
+        }
+
+        .etiqueta {
+            color: #888;
+        }
+
+        .valor {
+            font-weight: bold;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .ticket-box {
+            margin-top: 25px;
+            background: #080808;
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .ticket-titulo {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .ticket-codigo {
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            word-break: break-all;
+            margin-bottom: 20px;
+        }
+
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            padding: 15px;
+            width: fit-content;
+            margin: 20px auto;
+            border-radius: 10px;
+        }
+
+        #qrcode img,
+        #qrcode canvas {
+            display: block;
+        }
+
+        .qr-texto {
+            color: #aaa;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .valido {
+            color: #32d583;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .boton {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            background: white;
+            color: black;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .cargando {
+            color: #aaa;
+            padding: 30px;
+        }
+
+        .error {
+            background: #2b1010;
+            border: 1px solid #a33;
+            color: #ff8d8d;
+            padding: 20px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+    <div class="logo">ADG</div>
+
+    <h1>Atmósfera de Gloria</h1>
+
+    <p class="mensaje">
+        Comprobante de pago
+    </p>
+
+    <div id="contenido">
+
+        <div class="cargando">
+            Consultando tu pago...
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+async function cargarComprobante() {
+
+    const contenido = document.getElementById("contenido");
+
+    // =====================================================
+    // OBTENER ID DE LA TRANSACCIÓN
+    // =====================================================
+
+    const parametros = new URLSearchParams(
+        window.location.search
+    );
+
+    let transactionId = parametros.get("id");
+
+    // También intentamos transaction_id
+    if (!transactionId) {
+        transactionId = parametros.get("transaction_id");
+    }
+
+    // También intentamos obtenerlo del hash
+    if (!transactionId && window.location.hash) {
+
+        const hashParams = new URLSearchParams(
+            window.location.hash.substring(1)
+        );
+
+        transactionId =
+            hashParams.get("id") ||
+            hashParams.get("transaction_id");
+    }
+
+    console.log("=================================");
+    console.log("ID TRANSACCIÓN:", transactionId);
+    console.log("=================================");
+
+
+    // =====================================================
+    // SI NO HAY ID
+    // =====================================================
+
+    if (!transactionId) {
+
+        contenido.innerHTML = `
+            <div class="error">
+
+                <h2>No encontramos la transacción</h2>
+
+                <p>
+                    El pago pudo haberse realizado, pero
+                    no recibimos el número de transacción.
+                </p>
+
+                <p>
+                    Por favor, no realices otro pago.
+                </p>
+
+                <a href="index.html" class="boton">
+                    Volver al inicio
+                </a>
+
+            </div>
+        `;
+
+        return;
+    }
+
+
+    try {
+
+        // =====================================================
+        // 1. CONSULTAR TRANSACCIÓN EN NUESTRO SERVIDOR
+        // =====================================================
+
+        const respuesta = await fetch(
+    `http://localhost:3000/api/transaccion/${encodeURIComponent(transactionId)}`
+         );
+
+        const resultado = await respuesta.json();
+
+        console.log(
+            "RESPUESTA TRANSACCIÓN:",
+            resultado
+        );
+
+
+        if (!respuesta.ok || !resultado.success) {
+
+            throw new Error(
+                resultado.message ||
+                "No fue posible consultar la transacción."
+            );
+        }
+
+
+        const transaccion =
+            resultado.transaction;
+
+
+        // =====================================================
+        // 2. VERIFICAR QUE EL PAGO ESTÉ APROBADO
+        // =====================================================
+
+        if (transaccion.status !== "APPROVED") {
+
+            throw new Error(
+                "El pago no está aprobado. Estado: " +
+                transaccion.status
+            );
+        }
+
+
+        // =====================================================
+        // 3. CREAR / RECUPERAR TICKET
+        // =====================================================
+
+        console.log(
+            "CREANDO / RECUPERANDO TICKET..."
+        );
+
+
+       const respuestaComprobante =
+    await fetch(
+        "http://localhost:3000/api/crear-comprobante",
+        {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                transactionId: transaccion.id
+            })
+        }
+    );
+
+
+        const textoComprobante =
+            await respuestaComprobante.text();
+
+
+        console.log(
+            "RESPUESTA COMPROBANTE:",
+            textoComprobante
+        );
+
+
+        let comprobante;
+
+        try {
+
+            comprobante =
+                JSON.parse(textoComprobante);
+
+        } catch (error) {
+
+            throw new Error(
+                "El servidor no devolvió un comprobante válido."
+            );
+        }
+
+
+        if (
+            !respuestaComprobante.ok ||
+            !comprobante.success
+        ) {
+
+            throw new Error(
+                comprobante.error ||
+                comprobante.message ||
+                "No se pudo generar el ticket."
+            );
+        }
+
+
+        // =====================================================
+        // 4. OBTENER TICKET
+        // =====================================================
+
+        const ticket =
+            comprobante.ticket;
+
+
+        if (!ticket) {
+
+            throw new Error(
+                "El servidor no devolvió el ticket."
+            );
+        }
+
+
+        console.log(
+            "TICKET:",
+            ticket
+        );
+
+
+        // =====================================================
+        // 5. CÓDIGO ÚNICO DEL TICKET
+        // =====================================================
+
+        const codigoTicket =
+            ticket.ticketId;
+
+
+        if (!codigoTicket) {
+
+            throw new Error(
+                "El ticket no contiene un código único."
+            );
+        }
+
+
+        // =====================================================
+        // 6. MOSTRAR COMPROBANTE
+        // =====================================================
+
+        contenido.innerHTML = `
+
+            <div class="estado">
+
+                <h2>✓ Pago aprobado</h2>
+
+                <div>
+                    Tu pago fue procesado correctamente.
+                </div>
+
+            </div>
+
+
+            <div class="datos">
+
+                <div class="fila">
+
+                    <span class="etiqueta">
+                        Estado
+                    </span>
+
+                    <span class="valor">
+                        ${transaccion.status}
+                    </span>
+
+                </div>
+
+
+                <div class="fila">
+
+                    <span class="etiqueta">
+                        Referencia
+                    </span>
+
+                    <span class="valor">
+                        ${transaccion.reference || "N/A"}
+                    </span>
+
+                </div>
+
+
+                <div class="fila">
+
+                    <span class="etiqueta">
+                        Transacción
+                    </span>
+
+                    <span class="valor">
+                        ${transaccion.id}
+                    </span>
+
+                </div>
+
+
+                <div class="fila">
+
+                    <span class="etiqueta">
+                        Valor
+                    </span>
+
+                    <span class="valor">
+                        $${(
+                            transaccion.amount_in_cents / 100
+                        ).toLocaleString("es-CO")}
+                    </span>
+
+                </div>
+
+
+                <div class="fila">
+
+                    <span class="etiqueta">
+                        Método de pago
+                    </span>
+
+                    <span class="valor">
+                        ${
+                            transaccion.payment_method_type ||
+                            "N/A"
+                        }
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- ========================================= -->
+            <!-- TICKET -->
+            <!-- ========================================= -->
+
+            <div class="ticket-box">
+
+                <div class="ticket-titulo">
+                    🎟️ TU TICKET
+                </div>
+
+
+                <div class="ticket-codigo">
+                    ${codigoTicket}
+                </div>
+
+
+                <div id="qrcode"></div>
+
+
+                <div class="qr-texto">
+                    Presenta este código QR al ingresar
+                    al evento.
+                </div>
+
+
+                <div class="valido">
+                    ✓ TICKET PAGADO
+                </div>
+
+            </div>
+
+
+            <a href="index.html" class="boton">
+                Volver al inicio
+            </a>
+
+        `;
+
+
+        // =====================================================
+        // 7. GENERAR QR
+        // =====================================================
+
+        const qrContenido =
+        "http://localhost:3000/api/ticket/" +
+         encodeURIComponent(codigoTicket);
+
+
+        console.log(
+            "URL DEL QR:",
+            qrContenido
+        );
+
+
+        new QRCode(
+            document.getElementById("qrcode"),
+            {
+                text: qrContenido,
+
+                width: 220,
+
+                height: 220,
+
+                colorDark: "#000000",
+
+                colorLight: "#ffffff",
+
+                correctLevel:
+                    QRCode.CorrectLevel.H
+            }
+        );
+
+
+        console.log(
+            "================================="
+        );
+
+        console.log(
+            "TICKET CREADO CORRECTAMENTE"
+        );
+
+        console.log(
+            "Código:",
+            codigoTicket
+        );
+
+        console.log(
+            "QR:",
+            qrContenido
+        );
+
+        console.log(
+            "================================="
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "ERROR GENERANDO COMPROBANTE:",
+            error
+        );
+
+
+        contenido.innerHTML = `
+
+            <div class="error">
+
+                <h2>
+                    No pudimos cargar el comprobante
+                </h2>
+
+                <p>
+                    ${error.message}
+                </p>
+
+                <p>
+                    Si el pago fue aprobado,
+                    <strong>no realices otro pago.</strong>
+                </p>
+
+                <a href="index.html" class="boton">
+                    Volver al inicio
+                </a>
+
+            </div>
+
+        `;
+    }
+}
+
+
+// =====================================================
+// EJECUTAR
+// =====================================================
+
+cargarComprobante();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1 @@
+console.log("Atmósfera de Gloria - sitio web cargado");

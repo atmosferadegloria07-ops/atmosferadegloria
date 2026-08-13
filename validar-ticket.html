@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Validar Ticket | Atmósfera de Gloria</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #050505;
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 20px;
+        }
+
+        .contenedor {
+            width: 100%;
+            max-width: 600px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 20px;
+            padding: 35px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,.5);
+        }
+
+        .logo {
+            font-size: 42px;
+            font-weight: 900;
+            margin-bottom: 5px;
+        }
+
+        h1 {
+            margin: 5px 0 10px;
+            font-size: 28px;
+        }
+
+        .subtitulo {
+            color: #999;
+            margin-bottom: 30px;
+        }
+
+        .lector {
+            background: #080808;
+            border: 2px dashed #444;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .lector h2 {
+            margin-top: 0;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            background: #151515;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 15px;
+        }
+
+        input:focus {
+            border-color: #32d583;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            background: white;
+            color: black;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: .9;
+        }
+
+        button:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .resultado {
+            display: none;
+            margin-top: 25px;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .resultado.exito {
+            display: block;
+            background: #082719;
+            border: 2px solid #16804b;
+        }
+
+        .resultado.error {
+            display: block;
+            background: #2b1010;
+            border: 2px solid #a33;
+        }
+
+        .icono {
+            font-size: 55px;
+            margin-bottom: 10px;
+        }
+
+        .titulo-resultado {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .detalle {
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .ticket {
+            margin-top: 20px;
+            background: #050505;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: left;
+        }
+
+        .fila {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 10px 0;
+            border-bottom: 1px solid #292929;
+        }
+
+        .fila:last-child {
+            border-bottom: none;
+        }
+
+        .etiqueta {
+            color: #888;
+        }
+
+        .valor {
+            font-weight: bold;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .nuevo {
+            margin-top: 20px;
+            background: #333;
+            color: white;
+        }
+
+        .nuevo:hover {
+            background: #444;
+        }
+
+        .instruccion {
+            color: #777;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+    </style>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+    <div class="logo">ADG</div>
+
+    <h1>Atmósfera de Gloria</h1>
+
+    <div class="subtitulo">
+        Sistema de validación de tickets
+    </div>
+
+
+    <div class="lector">
+
+        <h2>🎟️ Validar entrada</h2>
+
+        <p>
+            Escanea el código QR del ticket
+            o escribe el código manualmente.
+        </p>
+
+ 
+<div id="qr-reader" style="
+    width:100%;
+    max-width:500px;
+    margin:20px auto;
+    border-radius:15px;
+    overflow:hidden;
+"></div>
+
+<button
+    type="button"
+    id="btnCamara"
+    onclick="iniciarCamara()"
+    style="
+        width:100%;
+        padding:15px;
+        margin-bottom:20px;
+        border:none;
+        border-radius:10px;
+        background:#32d583;
+        color:#000;
+        font-size:16px;
+        font-weight:bold;
+        cursor:pointer;
+    "
+>
+    📷 ESCANEAR QR CON CÁMARA
+</button>
+        <input
+            type="text"
+            id="codigoTicket"
+            placeholder="Ej: ADG-1786424881372-F7252883CF"
+            autocomplete="off"
+        >
+
+        <button
+            id="botonValidar"
+            onclick="validarTicket()"
+        >
+            VALIDAR TICKET
+        </button>
+
+        <div class="instruccion">
+            El ticket solo puede utilizarse una vez.
+        </div>
+
+    </div>
+
+
+    <div id="resultado" class="resultado"></div>
+
+</div>
+
+
+<script>
+
+async function validarTicket() {
+
+    const input = document.getElementById("codigoTicket");
+    const boton = document.getElementById("botonValidar");
+    const resultado = document.getElementById("resultado");
+
+    const codigo = input.value.trim();
+
+    // ==========================================
+    // VERIFICAR QUE HAYA CÓDIGO
+    // ==========================================
+
+    if (!codigo) {
+
+        mostrarError(
+            "Falta el código",
+            "Escribe o escanea el código del ticket."
+        );
+
+        return;
+    }
+
+
+    // ==========================================
+    // DESACTIVAR BOTÓN
+    // ==========================================
+
+    boton.disabled = true;
+    boton.textContent = "VALIDANDO...";
+
+
+    resultado.style.display = "none";
+
+
+    try {
+
+        console.log("VALIDANDO TICKET:", codigo);
+
+
+        // ==========================================
+        // CONSULTAR SERVIDOR
+        // ==========================================
+
+        const respuesta = await fetch(
+            "http://localhost:3000/api/usar-ticket/" +
+            encodeURIComponent(codigo),
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+
+        const datos = await respuesta.json();
+
+
+        console.log(
+            "RESPUESTA VALIDACIÓN:",
+            datos
+        );
+
+
+        // ==========================================
+        // TICKET VÁLIDO
+        // ==========================================
+
+        if (respuesta.ok && datos.success) {
+
+            const ticket = datos.ticket;
+
+            mostrarExito(ticket);
+
+        }
+
+        // ==========================================
+        // TICKET INVÁLIDO
+        // ==========================================
+
+        else {
+
+            mostrarError(
+                "ENTRADA DENEGADA",
+                datos.error ||
+                datos.message ||
+                "El ticket no es válido."
+            );
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "ERROR VALIDANDO TICKET:",
+            error
+        );
+
+
+        mostrarError(
+            "ERROR DE CONEXIÓN",
+            "No pudimos comunicarnos con el servidor."
+        );
+
+    }
+
+
+    boton.disabled = false;
+    boton.textContent = "VALIDAR TICKET";
+}
+
+
+// ============================================================
+// MOSTRAR TICKET APROBADO
+// ============================================================
+
+function mostrarExito(ticket) {
+
+    const resultado =
+        document.getElementById("resultado");
+
+
+    resultado.className =
+        "resultado exito";
+
+
+    resultado.innerHTML = `
+
+        <div class="icono">
+            ✅
+        </div>
+
+        <div class="titulo-resultado">
+            ENTRADA AUTORIZADA
+        </div>
+
+        <div class="detalle">
+            Este ticket es válido y ha sido registrado
+            correctamente.
+        </div>
+
+
+        <div class="ticket">
+
+            <div class="fila">
+
+                <span class="etiqueta">
+                    Ticket
+                </span>
+
+                <span class="valor">
+                    ${ticket.ticketId || "N/A"}
+                </span>
+
+            </div>
+
+
+            <div class="fila">
+
+                <span class="etiqueta">
+                    Estado
+                </span>
+
+                <span class="valor">
+                    ${ticket.status || "PAGADO"}
+                </span>
+
+            </div>
+
+
+            <div class="fila">
+
+                <span class="etiqueta">
+                    Referencia
+                </span>
+
+                <span class="valor">
+                    ${ticket.reference || "N/A"}
+                </span>
+
+            </div>
+
+
+            <div class="fila">
+
+                <span class="etiqueta">
+                    Valor
+                </span>
+
+                <span class="valor">
+                    $${Number(
+                        ticket.amount || 0
+                    ).toLocaleString("es-CO")}
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="nuevo"
+            onclick="nuevoTicket()"
+        >
+            VALIDAR OTRO TICKET
+        </button>
+
+    `;
+
+}
+
+
+// ============================================================
+// MOSTRAR ERROR
+// ============================================================
+
+function mostrarError(titulo, mensaje) {
+
+    const resultado =
+        document.getElementById("resultado");
+
+
+    resultado.className =
+        "resultado error";
+
+
+    resultado.innerHTML = `
+
+        <div class="icono">
+            ❌
+        </div>
+
+        <div class="titulo-resultado">
+            ${titulo}
+        </div>
+
+        <div class="detalle">
+            ${mensaje}
+        </div>
+
+
+        <button
+            class="nuevo"
+            onclick="nuevoTicket()"
+        >
+            INTENTAR NUEVAMENTE
+        </button>
+
+    `;
+
+}
+
+
+// ============================================================
+// LIMPIAR
+// ============================================================
+
+function nuevoTicket() {
+
+    const input =
+        document.getElementById("codigoTicket");
+
+    const resultado =
+        document.getElementById("resultado");
+
+
+    input.value = "";
+
+    resultado.style.display = "none";
+
+    input.focus();
+
+}
+
+
+// ============================================================
+// ENTER PARA VALIDAR
+// ============================================================
+
+document
+    .getElementById("codigoTicket")
+    .addEventListener(
+        "keydown",
+        function(event) {
+
+            if (event.key === "Enter") {
+
+                validarTicket();
+
+            }
+
+        }
+    );
+// ==========================================
+// LECTOR QR CON CÁMARA
+// ==========================================
+
+let qrScannerActivo = false;
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<script>
+
+let qrScanner = null;
+let codigoEscaneado = null;
+
+
+// ==========================================
+// ESCANEAR QR CON LA CÁMARA
+// ==========================================
+
+async function iniciarCamara() {
+
+    const lector = document.getElementById("qr-reader");
+    const boton = document.getElementById("btnCamara");
+
+    if (!lector) {
+        alert("No se encontró el lector QR.");
+        return;
+    }
+
+    if (qrScanner) {
+        return;
+    }
+
+    boton.disabled = true;
+    boton.textContent = "📷 CÁMARA ACTIVA...";
+
+    try {
+
+        qrScanner = new Html5Qrcode("qr-reader");
+
+        const camaras = await Html5Qrcode.getCameras();
+
+        if (!camaras || camaras.length === 0) {
+            throw new Error("No se encontró ninguna cámara.");
+        }
+
+        let camaraSeleccionada = camaras[0].id;
+
+        // Preferir cámara trasera
+        for (const camara of camaras) {
+
+            if (
+                camara.label &&
+                (
+                    camara.label.toLowerCase().includes("back") ||
+                    camara.label.toLowerCase().includes("trasera") ||
+                    camara.label.toLowerCase().includes("rear")
+                )
+            ) {
+                camaraSeleccionada = camara.id;
+                break;
+            }
+        }
+
+        await qrScanner.start(
+            camaraSeleccionada,
+            {
+                fps: 10,
+                qrbox: {
+                    width: 250,
+                    height: 250
+                }
+            },
+            (codigo) => {
+
+                console.log("QR ESCANEADO:", codigo);
+
+                codigoEscaneado = codigo;
+
+                const campo = document.getElementById("codigoTicket");
+
+                if (campo) {
+                    campo.value = codigo;
+                }
+
+                detenerCamara();
+
+                setTimeout(() => {
+                    validarTicket();
+                }, 300);
+
+            },
+            (errorMessage) => {
+                // No hacemos nada con errores normales de lectura
+            }
+        );
+
+    } catch (error) {
+
+        console.error("ERROR DE CÁMARA:", error);
+
+        qrScanner = null;
+
+        boton.disabled = false;
+        boton.textContent = "📷 ESCANEAR QR CON CÁMARA";
+
+        alert(
+            "No fue posible acceder a la cámara.\n\n" +
+            "Verifica que Chrome tenga permiso para usarla."
+        );
+    }
+}
+
+
+// ==========================================
+// DETENER CÁMARA
+// ==========================================
+
+async function detenerCamara() {
+
+    if (!qrScanner) {
+        return;
+    }
+
+    try {
+
+        await qrScanner.stop();
+
+        qrScanner.clear();
+
+        qrScanner = null;
+
+        const boton = document.getElementById("btnCamara");
+
+        if (boton) {
+            boton.disabled = false;
+            boton.textContent = "📷 ESCANEAR QR CON CÁMARA";
+        }
+
+    } catch (error) {
+
+        console.error(
+            "ERROR DETENIENDO CÁMARA:",
+            error
+        );
+
+        qrScanner = null;
+    }
+}
+
+
+// ==========================================
+// VALIDAR AUTOMÁTICAMENTE AL PRESIONAR ENTER
+// ==========================================
+
+document
+    .getElementById("codigoTicket")
+    .addEventListener(
+        "keydown",
+        function(event) {
+
+            if (event.key === "Enter") {
+
+                validarTicket();
+
+            }
+
+        }
+    );
+
+</script>
+
+</body>
+</html>

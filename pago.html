@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Pago | Atmósfera de Gloria
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
+    <!-- WOMPI -->
+    <script
+        src="https://checkout.wompi.co/widget.js">
+    </script>
+
+</head>
+
+
+<body>
+
+
+<header class="header">
+
+    <nav class="nav container">
+
+        <a
+            href="index.html"
+            class="logo"
+        >
+            ADG
+        </a>
+
+
+        <a
+            href="registro.html"
+            class="btn btn-small"
+        >
+            VOLVER
+        </a>
+
+    </nav>
+
+</header>
+
+
+
+<main>
+
+<section class="registration-page">
+
+<div class="registration-container">
+
+
+    <!-- ========================================= -->
+    <!-- ENCABEZADO -->
+    <!-- ========================================= -->
+
+    <div class="registration-header">
+
+        <span>
+            ATMÓSFERA DE GLORIA 2026
+        </span>
+
+        <h1>
+            PAGO
+        </h1>
+
+        <p>
+            Verifica tus datos antes de continuar.
+        </p>
+
+    </div>
+
+
+
+    <!-- ========================================= -->
+    <!-- RESUMEN -->
+    <!-- ========================================= -->
+
+    <div class="payment-summary">
+
+
+        <div class="summary-row">
+
+            <span>
+                Nombre
+            </span>
+
+            <strong id="nombre">
+                -
+            </strong>
+
+        </div>
+
+
+        <div class="summary-row">
+
+            <span>
+                Documento
+            </span>
+
+            <strong id="documento">
+                -
+            </strong>
+
+        </div>
+
+
+        <div class="summary-row">
+
+            <span>
+                WhatsApp
+            </span>
+
+            <strong id="telefono">
+                -
+            </strong>
+
+        </div>
+
+
+        <div class="summary-row">
+
+            <span>
+                Correo
+            </span>
+
+            <strong id="correo">
+                -
+            </strong>
+
+        </div>
+
+
+        <div class="summary-row">
+
+            <span>
+                Ciudad
+            </span>
+
+            <strong id="ciudad">
+                -
+            </strong>
+
+        </div>
+
+
+        <div class="summary-row">
+
+            <span>
+                Entrada
+            </span>
+
+            <strong id="tipo">
+                -
+            </strong>
+
+        </div>
+
+
+        <div class="summary-total">
+
+            <span>
+                TOTAL
+            </span>
+
+            <strong id="valor">
+                $0
+            </strong>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- ========================================= -->
+    <!-- PAGO -->
+    <!-- ========================================= -->
+
+    <div class="payment-box">
+
+        <h2>
+            Pago seguro
+        </h2>
+
+
+        <p id="mensaje">
+            Haz clic en el botón para continuar con Wompi.
+        </p>
+
+
+        <button
+            type="button"
+            id="botonPagar"
+            class="btn register-button"
+        >
+            PAGAR CON WOMPI
+        </button>
+
+
+        <p
+            id="estado"
+            style="
+                margin-top:20px;
+                color:#888;
+            "
+        ></p>
+
+    </div>
+
+
+</div>
+
+</section>
+
+</main>
+
+
+
+<script>
+
+"use strict";
+
+
+// =====================================================
+// CONFIGURACIÓN
+// =====================================================
+
+const API_URL =
+    "http://localhost:3000/api/crear-pago";
+
+
+const API_COMPROBANTE =
+    "http://localhost:3000/api/crear-comprobante";
+
+
+// =====================================================
+// RECUPERAR REGISTRO
+// =====================================================
+
+const datosGuardados =
+    localStorage.getItem(
+        "registroAtmosfera"
+    );
+
+
+if (!datosGuardados) {
+
+    alert(
+        "No encontramos tu registro. Vuelve a registrarte."
+    );
+
+    window.location.href =
+        "registro.html";
+}
+
+
+let registro;
+
+
+try {
+
+    registro =
+        JSON.parse(
+            datosGuardados
+        );
+
+} catch (error) {
+
+    console.error(
+        error
+    );
+
+    alert(
+        "Los datos del registro no son válidos."
+    );
+
+    window.location.href =
+        "registro.html";
+}
+
+
+
+// =====================================================
+// MOSTRAR DATOS
+// =====================================================
+
+document.getElementById(
+    "nombre"
+).textContent =
+    registro.nombre || "-";
+
+
+document.getElementById(
+    "documento"
+).textContent =
+    registro.documento || "-";
+
+
+document.getElementById(
+    "telefono"
+).textContent =
+    registro.telefono || "-";
+
+
+document.getElementById(
+    "correo"
+).textContent =
+    registro.correo || "-";
+
+
+document.getElementById(
+    "ciudad"
+).textContent =
+    registro.ciudad || "-";
+
+
+
+// =====================================================
+// PRECIO
+// =====================================================
+
+let tipoTexto =
+    "Entrada General";
+
+
+let valor =
+    70000;
+
+
+// =====================================================
+// VIP
+// =====================================================
+
+if (
+    registro.tipo === "vip"
+) {
+
+    tipoTexto =
+        "VIP";
+
+    valor =
+        150000;
+}
+
+
+// =====================================================
+// VIP ESPECIAL
+// =====================================================
+
+if (
+    registro.tipo === "vip_especial" ||
+    registro.tipo === "vip-especial"
+) {
+
+    tipoTexto =
+        "VIP Especial";
+
+    valor =
+        200000;
+}
+
+
+// =====================================================
+// MOSTRAR PRECIO
+// =====================================================
+
+document.getElementById(
+    "tipo"
+).textContent =
+    tipoTexto;
+
+
+document.getElementById(
+    "valor"
+).textContent =
+    "$" +
+    valor.toLocaleString(
+        "es-CO"
+    );
+
+
+
+// =====================================================
+// BOTÓN
+// =====================================================
+
+document
+    .getElementById(
+        "botonPagar"
+    )
+    .addEventListener(
+        "click",
+        iniciarPago
+    );
+
+
+
+// =====================================================
+// FUNCIÓN PRINCIPAL
+// =====================================================
+
+async function iniciarPago() {
+
+
+    const boton =
+        document.getElementById(
+            "botonPagar"
+        );
+
+
+    const mensaje =
+        document.getElementById(
+            "mensaje"
+        );
+
+
+    const estado =
+        document.getElementById(
+            "estado"
+        );
+
+
+    boton.disabled =
+        true;
+
+
+    boton.textContent =
+        "PREPARANDO PAGO...";
+
+
+    mensaje.textContent =
+        "Generando referencia de pago...";
+
+
+    estado.textContent =
+        "";
+
+
+    try {
+
+
+        // =============================================
+        // CENTAVOS
+        // =============================================
+
+        const amountInCents =
+            valor * 100;
+
+
+        console.log(
+            "SOLICITANDO PAGO AL SERVIDOR..."
+        );
+
+
+        // =============================================
+        // CREAR PAGO EN NUESTRO SERVIDOR
+        // =============================================
+
+        const respuesta =
+            await fetch(
+                API_URL,
+                {
+
+                    method:
+                        "POST",
+
+                    headers:
+                    {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            amountInCents:
+                                amountInCents,
+
+                            currency:
+                                "COP"
+
+                        })
+                }
+            );
+
+
+        const texto =
+            await respuesta.text();
+
+
+        console.log(
+            "RESPUESTA SERVIDOR:",
+            texto
+        );
+
+
+        let pago;
+
+
+        try {
+
+            pago =
+                JSON.parse(
+                    texto
+                );
+
+        } catch (error) {
+
+            throw new Error(
+                "El servidor no devolvió JSON válido."
+            );
+        }
+
+
+        // =============================================
+        // VALIDAR RESPUESTA
+        // =============================================
+
+        if (
+            !respuesta.ok
+        ) {
+
+            throw new Error(
+                pago.error ||
+                pago.message ||
+                "Error del servidor."
+            );
+        }
+
+
+        if (
+            !pago.success
+        ) {
+
+            throw new Error(
+                pago.error ||
+                "No se pudo crear el pago."
+            );
+        }
+
+
+        // =============================================
+        // DATOS WOMPI
+        // =============================================
+
+        const reference =
+            pago.reference;
+
+
+        const amount =
+            Number(
+                pago.amountInCents
+            );
+
+
+        const currency =
+            pago.currency ||
+            "COP";
+
+
+        const publicKey =
+            pago.publicKey;
+
+
+        const signature =
+            pago.signature;
+
+
+        console.log(
+            "REFERENCE:",
+            reference
+        );
+
+
+        console.log(
+            "AMOUNT:",
+            amount
+        );
+
+
+        console.log(
+            "PUBLIC KEY:",
+            publicKey
+        );
+
+
+        console.log(
+            "SIGNATURE:",
+            signature
+        );
+
+
+        // =============================================
+        // VALIDACIONES
+        // =============================================
+
+        if (!reference) {
+
+            throw new Error(
+                "El servidor no entregó la referencia."
+            );
+        }
+
+
+        if (!publicKey) {
+
+            throw new Error(
+                "El servidor no entregó la publicKey de Wompi."
+            );
+        }
+
+
+        if (!signature) {
+
+            throw new Error(
+                "El servidor no entregó la firma de integridad."
+            );
+        }
+
+
+        if (!amount) {
+
+            throw new Error(
+                "El monto no es válido."
+            );
+        }
+
+
+        // =============================================
+        // ABRIR WOMPI
+        // =============================================
+
+        mensaje.textContent =
+            "Abriendo Wompi...";
+
+
+        boton.textContent =
+            "ABRIENDO WOMPI...";
+
+
+        // =============================================
+        // CREAR WIDGET
+        // =============================================
+
+        const checkout =
+            new WidgetCheckout({
+
+                currency:
+                    currency,
+
+                amountInCents:
+                    amount,
+
+                reference:
+                    reference,
+
+                publicKey:
+                    publicKey,
+
+                signature:
+                {
+                    integrity:
+                        signature
+                },
+
+                customerData:
+                {
+
+                    email:
+                        registro.correo ||
+                        undefined,
+
+                    fullName:
+                        registro.nombre ||
+                        undefined,
+
+                    phoneNumber:
+                        registro.telefono ||
+                        undefined,
+
+                    phoneNumberPrefix:
+                        "+57",
+
+                    legalId:
+                        registro.documento ||
+                        undefined,
+
+                    legalIdType:
+                        "CC"
+                }
+
+            });
+
+
+        console.log(
+            "WOMPI LISTO"
+        );
+
+
+        // =============================================
+        // ABRIR CHECKOUT
+        // =============================================
+
+        checkout.open(
+            async function(resultado) {
+
+                console.log(
+                    "RESULTADO WOMPI:",
+                    resultado
+                );
+
+
+                // =========================================
+                // VERIFICAR QUE EXISTE TRANSACCIÓN
+                // =========================================
+
+                if (
+                    !resultado ||
+                    !resultado.transaction
+                ) {
+
+                    estado.textContent =
+                        "No se recibió información del pago.";
+
+                    boton.disabled =
+                        false;
+
+                    boton.textContent =
+                        "PAGAR CON WOMPI";
+
+                    return;
+                }
+
+
+                const transaccion =
+                    resultado.transaction;
+
+
+                console.log(
+                    "TRANSACCIÓN:",
+                    transaccion
+                );
+
+
+                // =========================================
+                // PAGO APROBADO
+                // =========================================
+
+                if (
+                    transaccion.status ===
+                    "APPROVED"
+                ) {
+
+                    mensaje.textContent =
+                        "Pago aprobado. Generando comprobante...";
+
+
+                    estado.textContent =
+                        "Verificando pago...";
+
+
+                    boton.textContent =
+                        "GENERANDO COMPROBANTE...";
+
+
+                    try {
+
+
+                        // =================================
+                        // CREAR COMPROBANTE
+                        // =================================
+
+                        const respuestaComprobante =
+                            await fetch(
+                                API_COMPROBANTE,
+                                {
+
+                                    method:
+                                        "POST",
+
+                                    headers:
+                                    {
+                                        "Content-Type":
+                                            "application/json"
+                                    },
+
+                                    body:
+                                        JSON.stringify({
+
+                                            transactionId:
+                                                transaccion.id
+
+                                        })
+                                }
+                            );
+
+
+                        const textoComprobante =
+                            await respuestaComprobante.text();
+
+
+                        console.log(
+                            "RESPUESTA COMPROBANTE:",
+                            textoComprobante
+                        );
+
+
+                        let comprobante;
+
+
+                        try {
+
+                            comprobante =
+                                JSON.parse(
+                                    textoComprobante
+                                );
+
+                            } catch (error) {
+
+                                throw new Error(
+                                    "El servidor no devolvió el comprobante correctamente."
+                                );
+                            }
+
+
+                        if (
+                            !respuestaComprobante.ok ||
+                            !comprobante.success
+                        ) {
+
+                            throw new Error(
+                                comprobante.error ||
+                                comprobante.message ||
+                                "No se pudo generar el comprobante."
+                            );
+                        }
+
+
+                        console.log(
+                            "COMPROBANTE:",
+                            comprobante
+                        );
+
+
+                        // =================================
+                        // GUARDAR DATOS
+                        // =================================
+
+                        localStorage.setItem(
+                            "ticketAtmosfera",
+                            JSON.stringify(
+                                comprobante.ticket
+                            )
+                        );
+
+
+                        // =================================
+                        // IR AL COMPROBANTE
+                        // =================================
+
+                        window.location.href =
+                            "pago-exito.html?ticket=" +
+                            encodeURIComponent(
+                                comprobante.ticket.ticketId
+                            ) +
+                            "&id=" +
+                            encodeURIComponent(
+                                transaccion.id
+                            );
+
+
+                    } catch (error) {
+
+                        console.error(
+                            "ERROR GENERANDO COMPROBANTE:",
+                            error
+                        );
+
+
+                        mensaje.textContent =
+                            "El pago fue aprobado, pero no pudimos generar el comprobante.";
+
+
+                        estado.textContent =
+                            error.message;
+
+
+                        boton.disabled =
+                            false;
+
+
+                        boton.textContent =
+                            "GENERAR COMPROBANTE NUEVAMENTE";
+                    }
+
+
+                    return;
+                }
+
+
+                // =========================================
+                // OTROS ESTADOS
+                // =========================================
+
+                estado.textContent =
+                    "Estado del pago: " +
+                    (
+                        transaccion.status ||
+                        "DESCONOCIDO"
+                    );
+
+
+                mensaje.textContent =
+                    "El pago no fue aprobado.";
+
+
+                boton.disabled =
+                    false;
+
+
+                boton.textContent =
+                    "INTENTAR NUEVAMENTE";
+
+            }
+        );
+
+
+    } catch (error) {
+
+
+        console.error(
+            "ERROR WOMPI:",
+            error
+        );
+
+
+        mensaje.textContent =
+            "No pudimos iniciar el pago.";
+
+
+        estado.textContent =
+            error.message;
+
+
+        boton.disabled =
+            false;
+
+
+        boton.textContent =
+            "INTENTAR NUEVAMENTE";
+    }
+
+}
+
+</script>
+
+
+</body>
+
+</html>

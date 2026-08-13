@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Registro | Atmósfera de Gloria</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <!-- =========================
+         HEADER
+    ========================== -->
+
+    <header class="header">
+
+        <nav class="nav container">
+
+            <a href="index.html" class="logo">
+                ADG
+            </a>
+
+            <a href="index.html" class="btn btn-small">
+                VOLVER
+            </a>
+
+        </nav>
+
+    </header>
+
+
+    <!-- =========================
+         REGISTRO
+    ========================== -->
+
+    <main>
+
+        <section class="registration-page">
+
+            <div class="registration-container">
+
+                <div class="registration-header">
+
+                    <span>
+                        ATMÓSFERA DE GLORIA 2026
+                    </span>
+
+                    <h1>
+                        LEVÁNTATE 2.0
+                    </h1>
+
+                    <p>
+                        Completa tus datos para continuar.
+                    </p>
+
+                </div>
+
+
+                <!-- =========================
+                     FORMULARIO
+                ========================== -->
+
+                <form id="registroForm">
+
+
+                    <!-- NOMBRE -->
+
+                    <div class="form-group">
+
+                        <label for="nombre">
+                            Nombre completo
+                        </label>
+
+                        <input
+                            type="text"
+                            id="nombre"
+                            name="nombre"
+                            placeholder="Escribe tu nombre completo"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- DOCUMENTO -->
+
+                    <div class="form-group">
+
+                        <label for="documento">
+                            Número de documento
+                        </label>
+
+                        <input
+                            type="text"
+                            id="documento"
+                            name="documento"
+                            placeholder="Número de documento"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- WHATSAPP -->
+
+                    <div class="form-group">
+
+                        <label for="telefono">
+                            WhatsApp
+                        </label>
+
+                        <input
+                            type="tel"
+                            id="telefono"
+                            name="telefono"
+                            placeholder="Ej: 3001234567"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- CORREO -->
+
+                    <div class="form-group">
+
+                        <label for="correo">
+                            Correo electrónico
+                        </label>
+
+                        <input
+                            type="email"
+                            id="correo"
+                            name="correo"
+                            placeholder="correo@ejemplo.com"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- CIUDAD -->
+
+                    <div class="form-group">
+
+                        <label for="ciudad">
+                            Ciudad
+                        </label>
+
+                        <input
+                            type="text"
+                            id="ciudad"
+                            name="ciudad"
+                            placeholder="Ciudad"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- TIPO DE REGISTRO -->
+
+                    <div class="form-group">
+
+                        <label for="tipo">
+                            Tipo de entrada
+                        </label>
+
+                        <select
+                            id="tipo"
+                            name="tipo"
+                            required
+                        >
+
+                            <option value="">
+                                Selecciona una opción
+                            </option>
+
+                            <option value="general">
+                                Entrada General - $70.000
+                            </option>
+
+                            <option value="vip">
+                                VIP - $150.000
+                            </option>
+
+                            <option value="vip_especial">
+                                VIP Especial - $200.000
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- TERMINOS -->
+
+                    <div class="form-check">
+
+                        <input
+                            type="checkbox"
+                            id="terminos"
+                            required
+                        >
+
+                        <label for="terminos">
+
+                            Acepto el tratamiento de mis datos
+                            y las condiciones del evento.
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- BOTÓN -->
+
+                    <button
+                        type="submit"
+                        class="btn register-button"
+                    >
+
+                        CONTINUAR AL PAGO
+
+                    </button>
+
+
+                </form>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================
+         JAVASCRIPT
+    ========================== -->
+
+    <script>
+
+        document
+            .getElementById("registroForm")
+            .addEventListener("submit", function(event) {
+
+                event.preventDefault();
+
+
+                // Obtener datos
+
+                const nombre =
+                    document.getElementById("nombre").value.trim();
+
+                const documento =
+                    document.getElementById("documento").value.trim();
+
+                const telefono =
+                    document.getElementById("telefono").value.trim();
+
+                const correo =
+                    document.getElementById("correo").value.trim();
+
+                const ciudad =
+                    document.getElementById("ciudad").value.trim();
+
+                const tipo =
+                    document.getElementById("tipo").value;
+
+
+                // Precios
+
+                let valor = 0;
+
+                if (tipo === "general") {
+                    valor = 70000;
+                }
+
+                if (tipo === "vip") {
+                    valor = 150000;
+                }
+
+                if (tipo === "vip_especial") {
+                    valor = 200000;
+                }
+
+
+                // Crear registro
+
+                const registro = {
+
+                    nombre: nombre,
+
+                    documento: documento,
+
+                    telefono: telefono,
+
+                    correo: correo,
+
+                    ciudad: ciudad,
+
+                    tipo: tipo,
+
+                    valor: valor,
+
+                    fecha: new Date().toISOString()
+
+                };
+
+
+                // Guardar temporalmente
+
+                localStorage.setItem(
+                    "registroAtmosfera",
+                    JSON.stringify(registro)
+                );
+
+
+                // Ir al pago
+
+                window.location.href = "pago.html";
+
+            });
+
+    </script>
+
+
+</body>
+
+</html>
